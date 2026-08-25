@@ -1,0 +1,134 @@
+"""
+Data models for PI-RADS v2.1 (Prostate Imaging Reporting and Data System).
+Standard: ACR PI-RADS v2.1
+"""
+from dataclasses import dataclass, field
+from enum import Enum
+from typing import List, Optional, Dict, Any
+
+
+class ProstateZone(str, Enum):
+    PERIPHERAL = "peripheral"
+    TRANSITION = "transition"
+    ANTERIOR_FIBROMUSCULAR = "anterior_fibromuscular"
+    CENTRAL = "central"
+
+
+class DWIScore(int, Enum):
+    """DWI scoring 1-5."""
+    SCORE_1 = 1
+    SCORE_2 = 2
+    SCORE_3 = 3
+    SCORE_4 = 4
+    SCORE_5 = 5
+
+
+class T2WScore(int, Enum):
+    """T2-weighted scoring 1-5."""
+    SCORE_1 = 1
+    SCORE_2 = 2
+    SCORE_3 = 3
+    SCORE_4 = 4
+    SCORE_5 = 5
+
+
+class DCEScore(int, Enum):
+    """DCE scoring: positive or negative."""
+    NEGATIVE = 0
+    POSITIVE = 1
+
+
+class PIRADSScore(int, Enum):
+    """Final PI-RADS assessment 1-5."""
+    SCORE_1 = 1
+    SCORE_2 = 2
+    SCORE_3 = 3
+    SCORE_4 = 4
+    SCORE_5 = 5
+
+
+@dataclass
+class ProstateLesion:
+    """A prostate lesion identified on mpMRI."""
+    lesion_id: str
+    zone: ProstateZone
+    t2w_score: int  # 1-5
+    dwi_score: int  # 1-5
+    dce_positive: bool = False
+    size_mm: Optional[float] = None  # largest dimension in mm
+    location: str = ""  # e.g., "left base", "right mid", "left apex"
+    adc_value: Optional[float] = None  # ADC value (x10^-3 mm^2/s)
+    notes: str = ""
+
+    def validate(self) -> List[str]:
+        """Validate scores are in range. Returns list of errors."""
+        errors = []
+        if not 1 <= self.t2w_score <= 5:
+            errors.append(f"T2W score must be 1-5, got {self.t2w_score}")
+        if not 1 <= self.dwi_score <= 5:
+            errors.append(f"DWI score must be 1-5, got {self.dwi_score}")
+        if self.size_mm is not None and self.size_mm <= 0:
+            errors.append(f"Size must be positive, got {self.size_mm}")
+        return errors
+
+
+@dataclass
+class PIRADSResult:
+    """Result of a PI-RADS v2.1 assessment for a single lesion."""
+    lesion_id: str
+    zone: ProstateZone
+    t2w_score: int
+    dwi_score: int
+    dce_positive: bool
+    pirads_score: int  # final 1-5
+    primary_sequence: str  # "DWI" or "T2W"
+    secondary_sequence: str  # "DCE" or "DWI"
+    dce_upgrade_applied: bool = False
+    size_mm: Optional[float] = None
+    location: str = ""
+    biopsy_recommended: bool = False
+    clinical_significance: str = ""
+    notes: List[str] = field(default_factory=list)
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "lesion_id": self.lesion_id,
+            "zone": self.zone.value,
+            "t2w_score": self.t2w_score,
+            "dwi_score": self.dwi_score,
+            "dce_positive": self.dce_positive,
+            "pirads_score": self.pirads_score,
+            "primary_sequence": self.primary_sequence,
+            "secondary_sequence": self.secondary_sequence,
+            "dce_upgrade_applied": self.dce_upgrade_applied,
+            "size_mm": self.size_mm,
+            "location": self.location,
+            "biopsy_recommended": self.biopsy_recommended,
+            "clinical_significance": self.clinical_significance,
+            "notes": self.notes,
+        }
+
+
+@dataclass
+class PIRADSAssessment:
+    """Complete PI-RADS assessment for a patient with multiple lesions."""
+    lesions: List[PIRADSResult] = field(default_factory=list)
+    overall_notes: List[str] = field(default_factory=list)
+
+    @property
+    def max_pirads_score(self) -> int:
+        if not self.lesions:
+            return 0
+        return max(l.pirads_score for l in self.lesions)
+
+    @property
+    def has_actionable_lesion(self) -> bool:
+        return any(l.biopsy_recommended for l in self.lesions)
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "lesions": [l.to_dict() for l in self.lesions],
+            "max_pirads_score": self.max_pirads_score,
+            "has_actionable_lesion": self.has_actionable_lesion,
+            "overall_notes": self.overall_notes,
+        }

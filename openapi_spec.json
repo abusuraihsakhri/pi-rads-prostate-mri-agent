@@ -1,0 +1,115 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Pi Rads Prostate Mri Engine API",
+    "description": "Enterprise Distributed Component Platform (Clinical & Cryptographic AI) adhering to CAP / CLSI / NIST Standards.",
+    "version": "3.0.0-ENTERPRISE",
+    "contact": {
+      "name": "Dr. Abu Suraih Sakhri",
+      "url": "https://github.com/abusuraihsakhri"
+    }
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "Health and metadata check",
+        "responses": {
+          "200": {
+            "description": "System optimal"
+          }
+        }
+      }
+    },
+    "/metrics": {
+      "get": {
+        "summary": "Prometheus operational metrics",
+        "responses": {
+          "200": {
+            "description": "Prometheus text metrics"
+          }
+        }
+      }
+    },
+    "/api/audit": {
+      "post": {
+        "summary": "Dispatch task payload across specialized workers",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "task_id": {
+                    "type": "string"
+                  },
+                  "target_identifier": {
+                    "type": "string"
+                  },
+                  "primary_metric": {
+                    "type": "number"
+                  },
+                  "secondary_metric": {
+                    "type": "number"
+                  },
+                  "status_descriptor": {
+                    "type": "string"
+                  },
+                  "is_critical_flag": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "task_id",
+                  "target_identifier",
+                  "primary_metric"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Consensus dossier with HMAC signature"
+          }
+        }
+      }
+    },
+    "/api/chat": {
+      "post": {
+        "summary": "Air-gapped supervisory conversational assistant",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "query": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "query"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Supervisory response"
+          }
+        }
+      }
+    },
+    "/api/audit/logs": {
+      "get": {
+        "summary": "Retrieve and cryptographically verify HMAC audit trail",
+        "responses": {
+          "200": {
+            "description": "Cryptographic audit trail"
+          }
+        }
+      }
+    }
+  }
+}

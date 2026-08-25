@@ -1,0 +1,4 @@
+case_id,patient_synthetic_id,metric_primary,metric_secondary,is_stat,status_flag
+CASE-001,SYNTH-01,25.4,14.2,True,DISCORDANT
+CASE-002,SYNTH-02,12.0,4.1,False,NORMAL
+CASE-003,SYNTH-03,32.0,18.5,True,SUSPICIOUS

@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pi-rads-prostate-mri-engine"
+version = "2.0.0"
+description = "ProstateMRI Sentinel: PI-RADS v2.1 Multiparametric MRI Scoring Engine"
+readme = "README.md"
+authors = [{ name = "Dr. Abu Suraih Sakhri", email = "abusuraih@example.com" }]
+license = { text = "MIT" }
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Topic :: Scientific/Engineering :: Medical Science Apps.",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+requires-python = ">=3.9"
+dependencies = []
+
+[project.scripts]
+pi-rads-prostate-mri-engine = "pi_rads_prostate_mri_agent.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/abusuraihsakhri/pi-rads-prostate-mri-engine"
+Repository = "https://github.com/abusuraihsakhri/pi-rads-prostate-mri-engine.git"

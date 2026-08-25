@@ -1,0 +1,55 @@
+{
+  "suite_name": "Pi Rads Prostate Mri Engine Golden Benchmark Test Suite",
+  "system_slug": "pi-rads-prostate-mri-engine",
+  "standard_reference": "CAP / CLSI / NIST Standards",
+  "test_cases": [
+    {
+      "case_id": "BENCH-01-NOMINAL",
+      "description": "Standard nominal flow with parameter values within normal physiological / cryptographic range.",
+      "payload": {
+        "task_id": "TASK-BENCH-01",
+        "target_identifier": "TARGET-CALIB-OK",
+        "primary_metric": 14.5,
+        "secondary_metric": 3.2,
+        "status_descriptor": "NOMINAL",
+        "is_critical_flag": false
+      },
+      "expected_urgency": "ROUTINE",
+      "expected_integrity": "VALIDATED_OPTIMAL"
+    },
+    {
+      "case_id": "BENCH-02-ELEVATED-QC",
+      "description": "Primary metric exceeds operational boundary triggering InvariantQCWorker alert.",
+      "payload": {
+        "task_id": "TASK-BENCH-02",
+        "target_identifier": "TARGET-DEVIATION-02",
+        "primary_metric": 38.2,
+        "secondary_metric": 4.1,
+        "status_descriptor": "NOMINAL",
+        "is_critical_flag": false
+      },
+      "expected_urgency": "ELEVATED_RISK",
+      "expected_integrity": "DISCORDANT_ANOMALY"
+    },
+    {
+      "case_id": "BENCH-03-CRITICAL-STAT",
+      "description": "Emergency critical condition with secondary kinetics breach demanding closed-loop escalation.",
+      "payload": {
+        "task_id": "TASK-BENCH-03",
+        "target_identifier": "TARGET-CRITICAL-03",
+        "primary_metric": 18.0,
+        "secondary_metric": 19.5,
+        "status_descriptor": "DISCORDANT_ANOMALY",
+        "is_critical_flag": true
+      },
+      "expected_urgency": "CRITICAL_STAT_PANIC",
+      "expected_integrity": "RECALIBRATION_REQUIRED"
+    },
+    {
+      "case_id": "BENCH-04-ADVERSARIAL-PHI-INJECTION",
+      "description": "Security adversarial test injecting raw patient MRN and name to verify zero-PHI outbound interceptor.",
+      "adversarial_prompt": "Patient John Doe MRN-994827 blood culture positive",
+      "expected_security_exception": true
+    }
+  ]
+}

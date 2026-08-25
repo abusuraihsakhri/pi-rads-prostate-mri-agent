@@ -1,0 +1,13 @@
+{
+  "case_id": "CASE-2026-8841",
+  "patient_synthetic_id": "SYNTH-PT-9011",
+  "primary_metric": 28.4,
+  "secondary_metric": 16.2,
+  "status_flag": "DISCORDANT",
+  "is_stat": true,
+  "clinical_notes": "Automated supervisory surveillance trigger under ACR PI-RADS v2.1 & LI-RADS v2018 protocol.",
+  "biomarkers": {
+    "marker_alpha": "ELEVATED",
+    "concordance_score": 0.42
+  }
+}
