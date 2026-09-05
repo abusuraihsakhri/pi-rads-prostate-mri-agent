@@ -21,7 +21,7 @@ Key rules:
 
 Reference: ACR PI-RADS v2.1
 """
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 from .models import (
     ProstateZone, ProstateLesion, PIRADSResult, PIRADSAssessment,
     PIRADSScore,
@@ -172,3 +172,48 @@ def assess_patient(lesions: List[ProstateLesion]) -> PIRADSAssessment:
         lesions=results,
         overall_notes=overall_notes,
     )
+
+
+# ── Clinical Domain Engine ─────────────────────────────────────────
+
+class ClinicalDomainEngine:
+    """
+    Clinical domain evaluation engine for agent-based case assessment.
+
+    Provides evaluation methods for primary metrics, secondary kinetics,
+    and biomarker concordance checks.
+    """
+
+    @staticmethod
+    def evaluate_primary_index(metric: float) -> Optional[Dict[str, str]]:
+        """Evaluate primary metric against clinical thresholds."""
+        if metric > 25.0:
+            return {
+                "title": "Primary Metric Threshold Exceeded",
+                "finding": f"Primary measurement ({metric:.2f}) exceeds upper reference limit (25.00).",
+                "recommendation": "Initiate recalibration workflow and review secondary parameters.",
+            }
+        return None
+
+    @staticmethod
+    def evaluate_secondary_kinetics(metric: float, is_stat: bool) -> Optional[Dict[str, str]]:
+        """Evaluate secondary metric with STAT priority awareness."""
+        if is_stat or metric > 12.0:
+            return {
+                "title": "Secondary Kinetics Escalation",
+                "finding": f"CriticalFlag={is_stat} with secondary index {metric:.2f}.",
+                "recommendation": "Execute immediate closed-loop escalation and notify attending supervisor.",
+            }
+        return None
+
+    @staticmethod
+    def evaluate_biomarker_concordance(status_flag: str, biomarkers: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """Check biomarker concordance and status flag for discordance."""
+        flag_upper = str(status_flag).upper()
+        if "DISCORDANT" in flag_upper or "SUSPICIOUS" in flag_upper:
+            return {
+                "title": "Biomarker Discordance Detected",
+                "finding": f"Status flag '{status_flag}' indicates discordance with expected protocol.",
+                "recommendation": "Reconcile correlative findings with secondary confirmatory testing.",
+            }
+        return None

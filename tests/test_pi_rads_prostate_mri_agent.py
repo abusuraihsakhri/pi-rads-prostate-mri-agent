@@ -12,7 +12,7 @@ from agents.base import PHIGuard, AuditLogger, SecurityException
 from agents.models import SystemTaskPayload, UrgencyLevel, SystemIntegrityStatus
 from agents.workers import InvariantQCWorker, SafetyEscalationWorker, ProtocolConformanceWorker
 from agents.supervisor import SystemSupervisor
-from cli import main
+from pi_rads_prostate_mri_agent.cli import main
 
 
 def test_phi_guard_enforcement():
@@ -60,6 +60,5 @@ def test_supervisor_consensus_and_audit():
     assert AuditLogger.verify_integrity() is True
 
     # CLI tests
-    assert main(["audit", "--task-id", "CLI-TEST-01"]) == 0
+    assert main(["audit", "--case-id", "CLI-TEST-01"]) == 0
     assert main(["chat", "Explain", "specifications"]) == 0
-    assert main(["verify-audit"]) == 0

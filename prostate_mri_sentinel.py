@@ -12,9 +12,23 @@ import argparse
 import csv
 import datetime
 import json
+import os
 import sys
 import uuid
 from typing import Dict, Any, List, Optional
+
+
+def _validate_safe_path(file_path: str) -> str:
+    """Validate that a file path is safe (no path traversal)."""
+    abs_path = os.path.abspath(file_path)
+    if '\x00' in file_path:
+        raise ValueError("File path contains null bytes")
+    normalized = os.path.normpath(file_path)
+    if normalized.startswith('..') or '/../' in normalized or '\\..\\' in normalized:
+        cwd = os.getcwd()
+        if not abs_path.startswith(cwd):
+            raise ValueError(f"Path traversal detected: {file_path}")
+    return abs_path
 
 
 class Severity(str):
@@ -266,7 +280,11 @@ def main(argv=None):
         return 0
 
     if args.command == "batch":
-        with open(args.input, mode="r", encoding="utf-8-sig") as f:
+        # Validate input/output paths for security
+        safe_input = _validate_safe_path(args.input)
+        safe_output = _validate_safe_path(args.output)
+
+        with open(safe_input, mode="r", encoding="utf-8-sig") as f:
             reader = csv.DictReader(f)
             fieldnames = list(reader.fieldnames or [])
             rows = list(reader)
@@ -282,7 +300,7 @@ def main(argv=None):
             row_dict["consensus_summary"] = dossier["consensus_summary"]
             out_rows.append(row_dict)
 
-        with open(args.output, mode="w", encoding="utf-8", newline="") as f:
+        with open(safe_output, mode="w", encoding="utf-8", newline="") as f:
             writer = csv.DictWriter(f, fieldnames=out_fields)
             writer.writeheader()
             writer.writerows(out_rows)
