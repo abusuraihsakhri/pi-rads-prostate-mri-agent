@@ -74,21 +74,20 @@ class TestTransitionZone:
         r = score_transition_zone(lesion)
         assert r.pirads_score == 1
 
-    def test_tz_t2w_2_is_pirads_2(self):
-        lesion = ProstateLesion("L1", ProstateZone.TRANSITION, t2w_score=2, dwi_score=4)
-        r = score_transition_zone(lesion)
-        assert r.pirads_score == 2
+    @pytest.mark.parametrize("dwi,expected", [(1, 2), (3, 2), (4, 3), (5, 3)])
+    def test_tz_t2w_2_combination(self, dwi, expected):
+        lesion = ProstateLesion("L1", ProstateZone.TRANSITION, t2w_score=2, dwi_score=dwi)
+        assert score_transition_zone(lesion).pirads_score == expected
 
     def test_tz_t2w_3_dwi_3_is_pirads_3(self):
         lesion = ProstateLesion("L1", ProstateZone.TRANSITION, t2w_score=3, dwi_score=3)
         r = score_transition_zone(lesion)
         assert r.pirads_score == 3
 
-    def test_tz_t2w_3_dwi_4_upgrades_to_4(self):
-        """DWI score 4 upgrades TZ T2W score 3 to 4."""
+    def test_tz_t2w_3_dwi_4_stays_3(self):
         lesion = ProstateLesion("L1", ProstateZone.TRANSITION, t2w_score=3, dwi_score=4)
         r = score_transition_zone(lesion)
-        assert r.pirads_score == 4
+        assert r.pirads_score == 3
 
     def test_tz_t2w_3_dwi_5_upgrades_to_4(self):
         """DWI score 5 upgrades TZ T2W score 3 to 4."""
@@ -129,7 +128,7 @@ class TestBiopsyRecommendation:
     def test_pirads_3_biopsy_recommended(self):
         lesion = ProstateLesion("L1", ProstateZone.PERIPHERAL, t2w_score=3, dwi_score=3)
         r = score_lesion(lesion)
-        assert r.biopsy_recommended
+        assert not r.biopsy_recommended
 
     def test_pirads_4_biopsy_recommended(self):
         lesion = ProstateLesion("L1", ProstateZone.PERIPHERAL, t2w_score=4, dwi_score=4)
@@ -145,17 +144,11 @@ class TestBiopsyRecommendation:
 # ── Zone Routing Tests ──────────────────────────────────────────────
 
 class TestZoneRouting:
-    def test_anterior_fibromuscular_uses_tz_rules(self):
-        lesion = ProstateLesion("L1", ProstateZone.ANTERIOR_FIBROMUSCULAR, t2w_score=3, dwi_score=4)
-        r = score_lesion(lesion)
-        assert r.primary_sequence == "T2W"
-        assert r.pirads_score == 4
-
-    def test_central_zone_uses_tz_rules(self):
-        lesion = ProstateLesion("L1", ProstateZone.CENTRAL, t2w_score=3, dwi_score=5)
-        r = score_lesion(lesion)
-        assert r.primary_sequence == "T2W"
-        assert r.pirads_score == 4
+    @pytest.mark.parametrize("zone", [ProstateZone.ANTERIOR_FIBROMUSCULAR, ProstateZone.CENTRAL])
+    def test_unsupported_zones_are_not_assumed_tz(self, zone):
+        lesion = ProstateLesion("L1", zone, t2w_score=3, dwi_score=5)
+        with pytest.raises(ValueError, match="peripheral and transition zones"):
+            score_lesion(lesion)
 
 
 # ── Validation Tests ────────────────────────────────────────────────
@@ -170,6 +163,28 @@ class TestValidation:
         lesion = ProstateLesion("L1", ProstateZone.PERIPHERAL, t2w_score=3, dwi_score=0)
         with pytest.raises(ValueError):
             score_lesion(lesion)
+
+    @pytest.mark.parametrize("value", [float("nan"), float("inf"), -2, 0, "15"])
+    def test_invalid_lesion_size(self, value):
+        lesion = ProstateLesion("L1", ProstateZone.PERIPHERAL, t2w_score=3, dwi_score=3, size_mm=value)
+        with pytest.raises(ValueError):
+            score_lesion(lesion)
+
+    def test_bool_score_rejected(self):
+        lesion = ProstateLesion("L1", ProstateZone.PERIPHERAL, t2w_score=True, dwi_score=3)
+        with pytest.raises(ValueError):
+            score_lesion(lesion)
+
+    @pytest.mark.parametrize("dwi", [1, 2, 3, 4, 5])
+    @pytest.mark.parametrize("t2w", [1, 2, 3, 4, 5])
+    def test_tz_combination_table(self, t2w, dwi):
+        expected = t2w
+        if t2w == 2 and dwi >= 4:
+            expected = 3
+        elif t2w == 3 and dwi == 5:
+            expected = 4
+        lesion = ProstateLesion("L1", ProstateZone.TRANSITION, t2w_score=t2w, dwi_score=dwi)
+        assert score_lesion(lesion).pirads_score == expected
 
 
 # ── Patient Assessment Tests ────────────────────────────────────────
