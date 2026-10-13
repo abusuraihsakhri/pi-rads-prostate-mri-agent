@@ -170,6 +170,14 @@ class TestValidation:
         with pytest.raises(ValueError):
             score_lesion(lesion)
 
+    def test_zone_specific_entrypoints_reject_wrong_zones(self):
+        lesion = ProstateLesion("L1", ProstateZone.TRANSITION, t2w_score=3, dwi_score=5)
+        with pytest.raises(ValueError, match="peripheral-zone"):
+            score_peripheral_zone(lesion)
+        lesion.zone = ProstateZone.PERIPHERAL
+        with pytest.raises(ValueError, match="transition-zone"):
+            score_transition_zone(lesion)
+
     def test_bool_score_rejected(self):
         lesion = ProstateLesion("L1", ProstateZone.PERIPHERAL, t2w_score=True, dwi_score=3)
         with pytest.raises(ValueError):
