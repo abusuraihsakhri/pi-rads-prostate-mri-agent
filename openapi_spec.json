@@ -1,112 +1,115 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Pi Rads Prostate Mri Engine API",
-    "description": "Enterprise Distributed Component Platform (Clinical & Cryptographic AI) adhering to CAP / CLSI / NIST Standards.",
-    "version": "3.0.0-ENTERPRISE",
-    "contact": {
-      "name": "Dr. Abu Suraih Sakhri",
-      "url": "https://github.com/abusuraihsakhri"
-    }
+    "title": "PI-RADS v2.1 prostate MRI scoring reference",
+    "version": "2.0.1",
+    "description": "Illustrative route index for the scoring API. Canonical generated schema is available from a running FastAPI server at /openapi.json. No clinical or regulatory validation is claimed."
   },
   "paths": {
     "/health": {
       "get": {
-        "summary": "Health and metadata check",
+        "summary": "Service health and version",
         "responses": {
           "200": {
-            "description": "System optimal"
+            "description": "Health metadata"
           }
         }
       }
     },
-    "/metrics": {
-      "get": {
-        "summary": "Prometheus operational metrics",
+    "/api/score": {
+      "post": {
+        "summary": "Combine sequence scores for one PI-RADS lesion",
+        "description": "Validated scores from a qualified reader; not an image-analysis or clinical decision endpoint.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "zone": {
+                    "type": "string",
+                    "enum": [
+                      "peripheral",
+                      "transition"
+                    ]
+                  },
+                  "t2w_score": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 5
+                  },
+                  "dwi_score": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 5
+                  },
+                  "dce_positive": {
+                    "type": "boolean"
+                  },
+                  "size_mm": {
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                  },
+                  "location": {
+                    "type": "string",
+                    "maxLength": 100
+                  },
+                  "lesion_id": {
+                    "type": "string",
+                    "maxLength": 50
+                  }
+                },
+                "required": [
+                  "zone",
+                  "t2w_score",
+                  "dwi_score"
+                ]
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
-            "description": "Prometheus text metrics"
+            "description": "PI-RADS category combination result"
+          },
+          "422": {
+            "description": "Invalid input"
+          }
+        }
+      }
+    },
+    "/api/assess": {
+      "post": {
+        "summary": "Assess multiple lesions (up to 25)",
+        "responses": {
+          "200": {
+            "description": "Combined assessment with maximum PI-RADS category"
+          },
+          "422": {
+            "description": "Invalid input"
           }
         }
       }
     },
     "/api/audit": {
       "post": {
-        "summary": "Dispatch task payload across specialized workers",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "task_id": {
-                    "type": "string"
-                  },
-                  "target_identifier": {
-                    "type": "string"
-                  },
-                  "primary_metric": {
-                    "type": "number"
-                  },
-                  "secondary_metric": {
-                    "type": "number"
-                  },
-                  "status_descriptor": {
-                    "type": "string"
-                  },
-                  "is_critical_flag": {
-                    "type": "boolean"
-                  }
-                },
-                "required": [
-                  "task_id",
-                  "target_identifier",
-                  "primary_metric"
-                ]
-              }
-            }
-          }
-        },
+        "summary": "Legacy deterministic threshold demonstration",
+        "description": "Does not apply a validated PI-RADS clinical decision rule.",
         "responses": {
           "200": {
-            "description": "Consensus dossier with HMAC signature"
+            "description": "Demonstration audit result"
           }
         }
       }
     },
     "/api/chat": {
       "post": {
-        "summary": "Air-gapped supervisory conversational assistant",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "query": {
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "query"
-                ]
-              }
-            }
-          }
-        },
+        "summary": "Legacy local status/help query",
+        "description": "Deterministic mock; no language model inference.",
         "responses": {
           "200": {
-            "description": "Supervisory response"
-          }
-        }
-      }
-    },
-    "/api/audit/logs": {
-      "get": {
-        "summary": "Retrieve and cryptographically verify HMAC audit trail",
-        "responses": {
-          "200": {
-            "description": "Cryptographic audit trail"
+            "description": "Deterministic response"
           }
         }
       }
