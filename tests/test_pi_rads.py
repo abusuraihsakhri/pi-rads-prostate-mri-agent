@@ -4,6 +4,8 @@ Tests for PI-RADS v2.1 prostate MRI scoring engine.
 import sys
 import os
 import pytest
+import json
+from pathlib import Path
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -269,3 +271,20 @@ class TestCLI:
         assert ret == 0
         out = capsys.readouterr().out
         assert "likely" in out.lower()
+
+
+def test_benchmark_dataset_matches_scoring_engine():
+    """Run all committed synthetic guideline-combination fixtures."""
+    dataset_path = Path(__file__).resolve().parents[1] / "benchmark_dataset.json"
+    dataset = json.loads(dataset_path.read_text(encoding="utf-8"))
+    assert len(dataset["cases"]) >= 10
+    for case in dataset["cases"]:
+        lesion = ProstateLesion(
+            lesion_id=case["id"],
+            zone=ProstateZone(case["zone"]),
+            t2w_score=case["t2w_score"],
+            dwi_score=case["dwi_score"],
+            dce_positive=case["dce_positive"],
+        )
+        result = score_lesion(lesion)
+        assert result.pirads_score == case["expected_pirads"], case["id"]
