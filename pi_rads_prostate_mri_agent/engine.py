@@ -49,6 +49,8 @@ def score_peripheral_zone(lesion: ProstateLesion) -> PIRADSResult:
     In PZ: DWI is the primary determining sequence.
     DCE is secondary: positive DCE upgrades PI-RADS 3 to 4.
     """
+    if lesion.zone != ProstateZone.PERIPHERAL:
+        raise ValueError("Peripheral-zone scoring requires a peripheral-zone lesion")
     errors = lesion.validate()
     if errors:
         raise ValueError(f"Invalid lesion data: {'; '.join(errors)}")
@@ -104,6 +106,8 @@ def score_transition_zone(lesion: ProstateLesion) -> PIRADSResult:
     T2W 2 with DWI 4-5 becomes PI-RADS 3.
     T2W 3 with DWI 5 becomes PI-RADS 4; DWI 4 stays PI-RADS 3.
     """
+    if lesion.zone != ProstateZone.TRANSITION:
+        raise ValueError("Transition-zone scoring requires a transition-zone lesion")
     errors = lesion.validate()
     if errors:
         raise ValueError(f"Invalid lesion data: {'; '.join(errors)}")
