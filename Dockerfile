@@ -10,7 +10,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 COPY . .
-RUN python -m pip install --no-cache-dir ".[server]"
+RUN python -m pip install --no-cache-dir ".[server]" \
+    && useradd --uid 10001 --create-home appuser \
+    && chown -R appuser:appuser /app
+
+USER appuser
 
 EXPOSE 8000
 
