@@ -110,6 +110,9 @@ if (typeof document !== "undefined") {
         event.preventDefault();
         message.textContent = "";
         try {
+            if (entries.length >= 25) {
+                throw new Error("Maximum 25 lesions per assessment. Export or clear the current assessment.");
+            }
             const input = {
                 lesion_id: "Lesion " + (entries.length + 1),
                 zone: document.getElementById("zone").value,
@@ -155,7 +158,8 @@ if (typeof document !== "undefined") {
         document.body.append(anchor);
         anchor.click();
         anchor.remove();
-        URL.revokeObjectURL(url);
+        // Allow the browser to finish handling the download before releasing the URL.
+        setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
     });
     render();
 }
