@@ -57,8 +57,8 @@ class Severity(str):
 class DomainKnowledgeRegistry:
     """Enterprise domain rules, guideline matrices, and evidence benchmarks."""
     SYSTEM_VERSION = "2.0.0-PRO-CLINICAL"
-    ZERO_PHI_COMPLIANCE = True
-    HIPAA_SAFE_HARBOR = "ACTIVE_ON_PREMISES"
+    ZERO_PHI_COMPLIANCE = False
+    HIPAA_SAFE_HARBOR = "NOT_ASSESSED"
 
     @staticmethod
     def audit_security_and_integrity(payload: Dict[str, Any]) -> List[str]:
@@ -190,9 +190,9 @@ class ProstateMRICoordinator:
         if "summary" in q or "status" in q:
             return f"ProstateMRI Sentinel: PI-RADS v2.1 Multiparametric MRI Scoring Agent currently tracking {len(self.case_registry)} cases in local air-gapped memory."
         elif "guidelines" in q or "protocol" in q:
-            return "All sub-agents operate under validated consensus clinical algorithms and CAP/CLSI/NCCN/WHO standards."
+            return "This deterministic demonstration is not a validated clinical guideline implementation."
         else:
-            return f"ProstateMRI Sentinel: PI-RADS v2.1 Multiparametric MRI Scoring Agent executive agent online. Continuous supervisory monitoring active across all domain parameters."
+            return "Deterministic demonstration available; no continuous clinical monitoring is performed."
 
 
 coordinator = ProstateMRICoordinator()
