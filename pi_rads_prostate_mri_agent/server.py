@@ -36,8 +36,8 @@ class AssessmentRequest(BaseModel):
 class AuditRequest(BaseModel):
     case_id: str = "CASE-2026-001"
     patient_synthetic_id: str = "SYNTH-PT-881"
-    primary_metric: float = 24.5
-    secondary_metric: float = 14.0
+    primary_metric: FiniteFloat = 24.5
+    secondary_metric: FiniteFloat = 14.0
     status_flag: str = "DISCORDANT"
     is_stat: bool = True
     clinical_notes: str = ""
