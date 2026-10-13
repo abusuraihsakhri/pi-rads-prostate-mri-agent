@@ -201,7 +201,7 @@ class ClinicalDomainEngine:
             return {
                 "title": "Primary Metric Threshold Exceeded",
                 "finding": f"Primary measurement ({metric:.2f}) exceeds upper reference limit (25.00).",
-                "recommendation": "Initiate recalibration workflow and review secondary parameters.",
+                "recommendation": "Review this nonvalidated demonstration threshold; do not use it for clinical management.",
             }
         return None
 
@@ -212,7 +212,7 @@ class ClinicalDomainEngine:
             return {
                 "title": "Secondary Kinetics Escalation",
                 "finding": f"CriticalFlag={is_stat} with secondary index {metric:.2f}.",
-                "recommendation": "Execute immediate closed-loop escalation and notify attending supervisor.",
+                "recommendation": "This is a demonstration-only flag, not an evidence-based clinical escalation.",
             }
         return None
 
@@ -224,6 +224,6 @@ class ClinicalDomainEngine:
             return {
                 "title": "Biomarker Discordance Detected",
                 "finding": f"Status flag '{status_flag}' indicates discordance with expected protocol.",
-                "recommendation": "Reconcile correlative findings with secondary confirmatory testing.",
+                "recommendation": "Check the demonstration input descriptor; no clinical inference is established.",
             }
         return None
