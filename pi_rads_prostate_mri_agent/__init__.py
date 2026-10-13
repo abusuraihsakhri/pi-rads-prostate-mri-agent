@@ -1,7 +1,7 @@
 """
 PI-RADS Prostate MRI Agent: ACR PI-RADS v2.1 multiparametric MRI scoring.
 """
-__version__ = "2.0.0-PRO"
+__version__ = "2.0.1"
 
 from .models import (
     ProstateZone, ProstateLesion, PIRADSResult, PIRADSAssessment,
