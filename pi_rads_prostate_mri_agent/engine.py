@@ -16,8 +16,8 @@ Score interpretation:
 
 Key rules:
   - PZ: DWI score determines PI-RADS. DCE positivity upgrades score 3 to 4.
-  - TZ: T2W score determines PI-RADS. DWI score 4-5 upgrades T2W score 3 to 4.
-  - Biopsy recommended for PI-RADS >= 3.
+  - TZ: T2W 2 + DWI 4-5 becomes 3; T2W 3 + DWI 5 becomes 4.
+  - PI-RADS does not independently determine biopsy management.
 
 Reference: ACR PI-RADS v2.1
 """
@@ -49,6 +49,8 @@ def score_peripheral_zone(lesion: ProstateLesion) -> PIRADSResult:
     In PZ: DWI is the primary determining sequence.
     DCE is secondary: positive DCE upgrades PI-RADS 3 to 4.
     """
+    if lesion.zone != ProstateZone.PERIPHERAL:
+        raise ValueError("Peripheral-zone scoring requires a peripheral-zone lesion")
     errors = lesion.validate()
     if errors:
         raise ValueError(f"Invalid lesion data: {'; '.join(errors)}")
@@ -72,7 +74,11 @@ def score_peripheral_zone(lesion: ProstateLesion) -> PIRADSResult:
     if dwi == 3 and not dce_pos:
         notes.append("DWI score 3 with DCE negative: PI-RADS remains 3.")
 
-    biopsy_rec = pirads >= 3
+    # Legacy boolean reports when biopsy should be considered, not a directive.
+    # PI-RADS 3 decisions depend on clinical context and are not automatic.
+    biopsy_rec = pirads >= 4
+    if pirads >= 3:
+        notes.append("Biopsy decisions require clinical risk assessment; PI-RADS alone is not a management recommendation.")
 
     return PIRADSResult(
         lesion_id=lesion.lesion_id,
@@ -97,8 +103,11 @@ def score_transition_zone(lesion: ProstateLesion) -> PIRADSResult:
     Score a lesion in the Transition Zone using PI-RADS v2.1 rules.
 
     In TZ: T2W is the primary determining sequence.
-    DWI is secondary: DWI score 4-5 upgrades T2W score 3 to 4.
+    T2W 2 with DWI 4-5 becomes PI-RADS 3.
+    T2W 3 with DWI 5 becomes PI-RADS 4; DWI 4 stays PI-RADS 3.
     """
+    if lesion.zone != ProstateZone.TRANSITION:
+        raise ValueError("Transition-zone scoring requires a transition-zone lesion")
     errors = lesion.validate()
     if errors:
         raise ValueError(f"Invalid lesion data: {'; '.join(errors)}")
@@ -111,12 +120,17 @@ def score_transition_zone(lesion: ProstateLesion) -> PIRADSResult:
     pirads = t2w
     dce_upgrade = False
 
-    # DWI upgrade rule: DWI score 4 or 5 upgrades T2W score 3 to 4
-    if pirads == 3 and dwi >= 4:
+    if t2w == 2 and dwi >= 4:
+        pirads = 3
+        notes.append(f"DWI score {dwi} upgraded T2W 2 to PI-RADS 3.")
+    elif t2w == 3 and dwi == 5:
         pirads = 4
-        notes.append(f"DWI score {dwi} upgraded PI-RADS from 3 to 4.")
+        notes.append("DWI score 5 upgraded T2W 3 to PI-RADS 4.")
 
-    biopsy_rec = pirads >= 3
+    # Clinical management is not prescribed by PI-RADS.
+    biopsy_rec = pirads >= 4
+    if pirads >= 3:
+        notes.append("Biopsy decisions require clinical risk assessment; PI-RADS alone is not a management recommendation.")
 
     return PIRADSResult(
         lesion_id=lesion.lesion_id,
@@ -141,14 +155,14 @@ def score_lesion(lesion: ProstateLesion) -> PIRADSResult:
     Score a prostate lesion based on its zone.
 
     Routes to PZ or TZ scoring based on lesion.zone.
-    Anterior fibromuscular and central zones use TZ rules.
+    Non-PZ/TZ regions require expert interpretation; TZ rules must not be
+    silently extrapolated to the central zone or anterior fibromuscular stroma.
     """
     if lesion.zone in (ProstateZone.PERIPHERAL,):
         return score_peripheral_zone(lesion)
-    elif lesion.zone in (ProstateZone.TRANSITION, ProstateZone.ANTERIOR_FIBROMUSCULAR, ProstateZone.CENTRAL):
+    elif lesion.zone == ProstateZone.TRANSITION:
         return score_transition_zone(lesion)
-    else:
-        raise ValueError(f"Unknown zone: {lesion.zone}")
+    raise ValueError(f"Automated PI-RADS combination is supported for peripheral and transition zones only; got {lesion.zone}")
 
 
 def assess_patient(lesions: List[ProstateLesion]) -> PIRADSAssessment:
@@ -191,7 +205,7 @@ class ClinicalDomainEngine:
             return {
                 "title": "Primary Metric Threshold Exceeded",
                 "finding": f"Primary measurement ({metric:.2f}) exceeds upper reference limit (25.00).",
-                "recommendation": "Initiate recalibration workflow and review secondary parameters.",
+                "recommendation": "Review this nonvalidated demonstration threshold; do not use it for clinical management.",
             }
         return None
 
@@ -202,7 +216,7 @@ class ClinicalDomainEngine:
             return {
                 "title": "Secondary Kinetics Escalation",
                 "finding": f"CriticalFlag={is_stat} with secondary index {metric:.2f}.",
-                "recommendation": "Execute immediate closed-loop escalation and notify attending supervisor.",
+                "recommendation": "This is a demonstration-only flag, not an evidence-based clinical escalation.",
             }
         return None
 
@@ -214,6 +228,6 @@ class ClinicalDomainEngine:
             return {
                 "title": "Biomarker Discordance Detected",
                 "finding": f"Status flag '{status_flag}' indicates discordance with expected protocol.",
-                "recommendation": "Reconcile correlative findings with secondary confirmatory testing.",
+                "recommendation": "Check the demonstration input descriptor; no clinical inference is established.",
             }
         return None

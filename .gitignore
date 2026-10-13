@@ -8,3 +8,11 @@ output.csv
 dist/
 build/
 *.egg-info/
+.venv/
+.env
+.env.*
+!.env.example
+.coverage
+.mypy_cache/
+.ruff_cache/
+.DS_Store

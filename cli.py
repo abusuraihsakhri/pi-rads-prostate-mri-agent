@@ -17,7 +17,7 @@ def main(argv=None):
 
     # score command - score a single lesion
     p_score = subparsers.add_parser("score", help="Score a single prostate lesion")
-    p_score.add_argument("--zone", required=True, choices=["peripheral", "transition", "anterior_fibromuscular", "central"],
+    p_score.add_argument("--zone", required=True, choices=["peripheral", "transition"],
                          help="Prostate zone")
     p_score.add_argument("--t2w", type=int, required=True, help="T2W score (1-5)")
     p_score.add_argument("--dwi", type=int, required=True, help="DWI score (1-5)")
@@ -68,7 +68,7 @@ def main(argv=None):
                 print(f"  * DCE upgrade applied")
             if result.size_mm:
                 print(f"  Size:        {result.size_mm}mm")
-            print(f"  Biopsy:      {'Recommended' if result.biopsy_recommended else 'Not recommended'}")
+            print(f"  Biopsy:      {'Consider with clinical assessment' if result.biopsy_recommended else 'Individual clinical assessment required'}")
             print(f"  Significance: {result.clinical_significance}")
             if result.notes:
                 for note in result.notes:
@@ -80,7 +80,7 @@ def main(argv=None):
         lesions = []
         for i, spec in enumerate(args.lesions):
             parts = spec.split(":")
-            if len(parts) < 3:
+            if len(parts) < 3 or len(parts) > 5:
                 print(f"Error: Invalid lesion spec '{spec}'. Use ZONE:T2W:DWI[:DCE][:SIZE]", file=sys.stderr)
                 return 1
             zone = ProstateZone(parts[0])
@@ -91,16 +91,20 @@ def main(argv=None):
             if len(parts) > 3:
                 if parts[3].lower() in ("dce", "positive", "true", "1"):
                     dce = True
+                elif parts[3].lower() in ("0", "false", "negative", "no", "none"):
+                    dce = False
                 else:
                     try:
                         size = float(parts[3])
                     except ValueError:
-                        pass
+                        print(f"Error: Invalid DCE or size value: {parts[3]!r}", file=sys.stderr)
+                        return 1
             if len(parts) > 4:
                 try:
                     size = float(parts[4])
                 except ValueError:
-                    pass
+                    print(f"Error: Invalid size value: {parts[4]!r}", file=sys.stderr)
+                    return 1
             lesions.append(ProstateLesion(
                 lesion_id=f"lesion_{i+1}",
                 zone=zone,
@@ -125,7 +129,7 @@ def main(argv=None):
                       f"DWI={lr.dwi_score}, DCE={'+' if lr.dce_positive else '-'} "
                       f"-> PI-RADS {lr.pirads_score}")
                 if lr.biopsy_recommended:
-                    print(f"    -> Biopsy recommended")
+                    print(f"    -> Consider biopsy in clinical context")
             print("=" * 60)
         return 0
 
@@ -152,9 +156,10 @@ def main(argv=None):
             print("  Peripheral Zone: DWI primary, DCE secondary")
             print("    - DCE positivity upgrades score 3 to 4")
             print("  Transition Zone: T2W primary, DWI secondary")
-            print("    - DWI score 4-5 upgrades T2W score 3 to 4")
+            print("    - T2W 2 + DWI >=4 becomes PI-RADS 3")
+            print("    - T2W 3 + DWI 5 becomes PI-RADS 4")
             print()
-            print("Biopsy recommendation: PI-RADS >= 3")
+            print("PI-RADS category alone does not determine biopsy management.")
         return 0
 
     return 0

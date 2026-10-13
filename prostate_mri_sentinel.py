@@ -31,6 +31,17 @@ def _validate_safe_path(file_path: str) -> str:
     return abs_path
 
 
+def _parse_bool(value):
+    if isinstance(value, bool):
+        return value
+    text = str(value).strip().lower()
+    if text in ("1", "true", "yes", "y"):
+        return True
+    if text in ("0", "false", "no", "n", ""):
+        return False
+    raise ValueError(f"Invalid boolean flag: {value!r}")
+
+
 class Severity(str):
     INFO = "INFO"
     ADVISORY = "ADVISORY"
@@ -46,8 +57,8 @@ class Severity(str):
 class DomainKnowledgeRegistry:
     """Enterprise domain rules, guideline matrices, and evidence benchmarks."""
     SYSTEM_VERSION = "2.0.0-PRO-CLINICAL"
-    ZERO_PHI_COMPLIANCE = True
-    HIPAA_SAFE_HARBOR = "ACTIVE_ON_PREMISES"
+    ZERO_PHI_COMPLIANCE = False
+    HIPAA_SAFE_HARBOR = "NOT_ASSESSED"
 
     @staticmethod
     def audit_security_and_integrity(payload: Dict[str, Any]) -> List[str]:
@@ -102,7 +113,7 @@ class TZSequenceEvaluatorAgent:
     """Specialized Sub-Agent 2 for pi-rads-prostate-mri-agent"""
     def evaluate(self, payload: Dict[str, Any]) -> List[AgentAlert]:
         alerts = []
-        is_critical = bool(payload.get("critical_flag", False))
+        is_critical = _parse_bool(payload.get("critical_flag", False))
         val2 = float(payload.get("metric_secondary", 5.0))
         if is_critical or val2 > 12.0:
             alerts.append(
@@ -179,9 +190,9 @@ class ProstateMRICoordinator:
         if "summary" in q or "status" in q:
             return f"ProstateMRI Sentinel: PI-RADS v2.1 Multiparametric MRI Scoring Agent currently tracking {len(self.case_registry)} cases in local air-gapped memory."
         elif "guidelines" in q or "protocol" in q:
-            return "All sub-agents operate under validated consensus clinical algorithms and CAP/CLSI/NCCN/WHO standards."
+            return "This deterministic demonstration is not a validated clinical guideline implementation."
         else:
-            return f"ProstateMRI Sentinel: PI-RADS v2.1 Multiparametric MRI Scoring Agent executive agent online. Continuous supervisory monitoring active across all domain parameters."
+            return "Deterministic demonstration available; no continuous clinical monitoring is performed."
 
 
 coordinator = ProstateMRICoordinator()
@@ -289,7 +300,7 @@ def main(argv=None):
             fieldnames = list(reader.fieldnames or [])
             rows = list(reader)
 
-        out_fields = fieldnames + ["overall_status", "total_alerts", "critical_count", "consensus_summary"]
+        out_fields = list(dict.fromkeys(fieldnames + ["overall_status", "total_alerts", "critical_count", "consensus_summary"]))
         out_rows = []
         for r in rows:
             dossier = coordinator.audit_case(dict(r))

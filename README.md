@@ -1,255 +1,93 @@
-# Pi Rads Prostate MRI Agent
+# PI-RADS Prostate MRI Agent
 
-> **Domain:** Diagnostic Radiology & Medical Imaging AI
-> **Reference Guidelines & Standards:** `American College of Radiology (ACR) RADS & Fleischner Society`
+A deterministic implementation of **PI-RADS v2.1 category combination rules** for prostate multiparametric MRI. It accepts sequence scores assigned by a reader; it does **not** analyze MRI pixels, classify images, detect lesions, diagnose cancer, or determine treatment.
 
-<div align="center">
+The repository includes a browser calculator, Python scoring API and CLI, and separate legacy agent/audit demonstration components.
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-![Python](https://img.shields.io/badge/Python-3.10%20%7C%203.11%20%7C%203.12-3776AB.svg?logo=python&logoColor=white)
-![FastAPI](https://img.shields.io/badge/FastAPI-0.111-009688.svg?logo=fastapi&logoColor=white)
-![Audit Trail](https://img.shields.io/badge/Audit-HMAC--SHA256_Tamper--Evident-brightgreen.svg)
-![Zero-PHI Guard](https://img.shields.io/badge/Guard-Zero--PHI_Outbound-blue.svg)
-![Docker](https://img.shields.io/badge/Docker-Ready-2496ED.svg?logo=docker&logoColor=white)
+## Browser calculator
 
-</div>
+Open [the local browser interface](web/index.html) to assess peripheral-zone or transition-zone lesions, add multiple lesions and export an assessment as JSON. It uses standard browser JavaScript, with **no backend, login, tracking, or external services required**. No information is saved between page sessions; exported JSON stays on the user's device. Avoid entering any identifiable patient information.
 
----
+A GitHub Pages deployment workflow is included; the public URL should only be used once deployment and live functionality are verified.
 
-## 📖 What It Does
+## Scoring methodology
 
-**Pi Rads Prostate MRI Agent** is an advanced analytical and computational platform implementing Multiparametric Prostate MRI PI-RADS v2.1 Scoring Engine. It provides:
+| Zone | Primary sequence | v2.1 combination rule |
+| --- | --- | --- |
+| Peripheral (PZ) | DWI | DWI 3 + positive DCE → PI-RADS 4; otherwise PI-RADS equals DWI score |
+| Transition (TZ) | T2W | T2W 2 + DWI 4–5 → PI-RADS 3; T2W 3 + DWI 5 → PI-RADS 4; otherwise T2W determines category |
 
-- **PI-RADS v2.1 Scoring**: Automated scoring of prostate lesions based on ACR guidelines
-- **Multi-Agent Architecture**: Distributed component system with specialized evaluation agents
-- **Zero-PHI Security**: AST and regex inspection blocking sensitive patient identifiers
-- **Tamper-Evident Audit Trail**: HMAC-SHA256 chained cryptographic logs
-- **FastAPI REST API**: OpenAPI 3.1 endpoints with Prometheus telemetry
+Central-zone and anterior fibromuscular stromal findings are **not automatically scored using TZ rules**. Sequence-level scores must already reflect appropriate morphology, lesion size and extension findings; a number-only input cannot verify those properties.
 
----
+PI-RADS categories describe MRI likelihood, not a management algorithm. **PI-RADS 3 is not an automatic biopsy indication**; biopsy decisions for all categories require clinical context and local guidelines. The legacy API field named `biopsy_recommended` is retained for compatibility and becomes true only for PI-RADS 4–5; it denotes *consideration*, not a clinical directive.
 
-## ⚙️ Key Capabilities & Algorithmic Modules
+Primary standard: [American College of Radiology, PI-RADS v2.1](https://www.acr.org/Clinical-Resources/Reporting-and-Data-Systems/PI-RADS).
 
-### 🔬 Core PI-RADS Scoring Engine
+## Installation
 
-- **`score_lesion()`**: Routes lesions to zone-specific scoring (PZ or TZ)
-- **`score_peripheral_zone()`**: PZ scoring with DWI primary, DCE secondary
-- **`score_transition_zone()`**: TZ scoring with T2W primary, DWI secondary
-- **`assess_patient()`**: Multi-lesion patient assessment
+Requires Python 3.10 or later.
 
-### 🤖 Agent Framework
-
-- **`PZSequenceEvaluatorAgent`**: Primary metric threshold evaluation
-- **`TZSequenceEvaluatorAgent`**: Secondary kinetics and STAT escalation
-- **`PIRADSCompositeScorerAgent`**: Biomarker concordance checking
-- **`SystemSupervisor`**: Master orchestrator with multi-worker consensus
-
-### 🛡️ Security & Audit
-
-- **`PHIGuard`**: Zero-PHI outbound interceptor (SSN, MRN, phone, email patterns)
-- **`AuditTrail`**: HMAC-SHA256 tamper-evident chained audit log
-- **`ClinicalDomainEngine`**: Clinical threshold evaluation engine
-
----
-
-## 💻 Installation
-
-```bash
-# Clone the repository
+~~~bash
 git clone https://github.com/abusuraihsakhri/pi-rads-prostate-mri-agent.git
 cd pi-rads-prostate-mri-agent
+python -m pip install -e ".[server,test]"
+python -m pytest -q
+~~~
 
-# Install dependencies
-pip install pydantic fastapi uvicorn pytest
+No cloud API keys are required for the deterministic scoring engine.
 
-# Optional: Set audit secret key for persistent audit integrity
-export AUDIT_SECRET_KEY="your-secure-random-key-here"
-```
+## Python CLI
 
----
+~~~bash
+pi-rads-score score --zone peripheral --t2w 3 --dwi 3 --dce-positive --json
+pi-rads-score score --zone transition --t2w 2 --dwi 4 --json
+pi-rads-score assess -l peripheral:3:3:dce:12 -l transition:2:4:0:8 --json
+pi-rads-score info
+~~~
 
-## 💻 CLI Quickstart & Usage
+The repository-root `python cli.py` provides the same score/assess/info interface. A separate compatibility command, `pi-rads-prostate-mri-engine`, provides deterministic `audit`, `batch`, `chat`, and `serve` agent utilities, **not** lesion scoring. The audit metrics are demonstration thresholds and must not be interpreted as validated medical criteria.
 
-### 1. Score a Single Lesion
-```bash
-python cli.py score --zone peripheral --t2w 3 --dwi 4 --dce-positive
-```
+## REST API
 
-### 2. Assess Multiple Lesions
-```bash
-python cli.py assess -l peripheral:3:4:dce:12 -l transition:2:2:0:8
-```
+~~~bash
+uvicorn pi_rads_prostate_mri_agent.server:create_app --factory --host 127.0.0.1 --port 8000
+~~~
 
-### 3. Get PI-RADS Score Information
-```bash
-python cli.py info
-python cli.py info 4
-```
+Available routes: `GET /health`, `POST /api/score`, `POST /api/assess`; the legacy deterministic `POST /api/audit` and `POST /api/chat` are retained.
 
-### 4. JSON Output
-```bash
-python cli.py score --zone peripheral --t2w 3 --dwi 4 --json
-python cli.py assess -l peripheral:3:4:dce --json
-```
+Example:
 
-### Parameter Reference
-| Parameter | Description | Values |
-|:----------|:------------|:-------|
-| `--zone` | Prostate zone | `peripheral`, `transition`, `anterior_fibromuscular`, `central` |
-| `--t2w` | T2-weighted score | 1-5 |
-| `--dwi` | Diffusion-weighted imaging score | 1-5 |
-| `--dce-positive` | DCE positivity flag | (boolean flag) |
-| `--size` | Lesion size in mm | (float) |
-| `--location` | Anatomical location | (string) |
-
-### Input Data Schema
-
-| Field | Description | Requirement |
-|:------|:------------|:------------|
-| `case_id` | Unique case identifier | Required |
-| `patient_synthetic_id` | De-identified patient token | Required |
-| `primary_metric` | Primary measurement value | Required |
-| `secondary_metric` | Secondary kinetic/confidence score | Required |
-| `status_flag` | Clinical status descriptor | Required |
-| `is_stat` | Emergency escalation flag | Required |
-
----
-
-## 🔌 REST API Server
-
-### Start the Server
-```bash
-python cli.py serve --host 0.0.0.0 --port 8000
-```
-
-### API Endpoints
-| Method | Endpoint | Description |
-|:-------|:---------|:------------|
-| `GET` | `/health` | Health check |
-| `POST` | `/api/audit` | Submit case for evaluation |
-| `POST` | `/api/chat` | Query supervisory assistant |
-| `GET` | `/metrics` | Prometheus telemetry |
-
-### Example API Request
-```bash
-curl -X POST http://localhost:8000/api/audit \
+~~~bash
+curl -s http://127.0.0.1:8000/api/score \
   -H "Content-Type: application/json" \
-  -d '{
-    "case_id": "CASE-2026-001",
-    "patient_synthetic_id": "SYNTH-PT-001",
-    "primary_metric": 24.5,
-    "secondary_metric": 14.0,
-    "status_flag": "DISCORDANT",
-    "is_stat": true
-  }'
-```
+  -d '{"zone":"transition","t2w_score":2,"dwi_score":4}'
+~~~
 
----
+Swagger/OpenAPI documentation is at `/docs`. The application can also be built with the included Dockerfile; `docker compose up --build` starts the same scoring API.
 
-## 🛡️ Security & Enterprise Architecture
+Do **not** submit real patient data to an untrusted or publicly exposed server. The API and agent utilities do not provide an independently validated HIPAA-compliant patient-data service.
 
-* **Zero-PHI Outbound Interceptor:** Active AST and regex inspection blocking SSNs, MRNs, phone numbers, and patient identifiers.
-* **Tamper-Evident HMAC-SHA256 Audit Trail:** Chained, cryptographically signed logs for every evaluation and state transition.
-* **Air-Gapped LLM Reasoning Adapter:** Agnostic integration for local Ollama instances (`llama3`, `mistral`), Claude 3.5 Sonnet, GPT-4o, and deterministic test mocks.
-* **Active Learning Bayesian Calibration:** Dynamic tracker updating worker reliability weights and monitoring Brier calibration drift.
-* **FastAPI & Prometheus Telemetry:** Exposes OpenAPI 3.1 REST endpoints and operational Prometheus metrics (`/metrics`).
-* **Path Traversal Protection:** Input validation on file paths prevents directory traversal attacks.
+## Additional components and limitations
 
----
+- `pi_rads_prostate_mri_agent/` — Python category-combination engine, FastAPI service, and deterministic audit coordinator
+- `agents/` — separate demonstration workers, regex identifier guard, HMAC audit log, and mock-only language interface
+- `prostate_mri_sentinel.py` and `enrichment.py` — retained legacy demonstration utilities; these are not image interpretation systems
+- `web/` — static HTML/JavaScript calculator with unit tests
+- `tests/` — scoring, validation, CLI, API, audit, and legacy tests
 
-## 🧪 Testing & Verification
+The identifier guard recognizes selected patterns but **cannot guarantee de-identification**. The HMAC audit trail is held in process memory; without a stable `AUDIT_SECRET_KEY`, a fresh random signing key is generated each run. It does not provide persistent, independently verifiable archival records. The mock language adapter performs no model inference or clinical validation.
 
-### Run All Tests
-```bash
-pytest -v
-```
+## Testing
 
-### Run Specific Test Suites
-```bash
-pytest tests/test_pi_rads.py -v          # PI-RADS scoring engine tests
-pytest tests/test_enrichment.py -v       # Enrichment module tests
-pytest test_prostate_mri_sentinel.py -v  # Sentinel agent tests
-pytest tests/test_pi_rads_prostate_mri_agent.py -v  # Agent framework tests
-```
+~~~bash
+python -m pytest -q
+python -m compileall -q agents pi_rads_prostate_mri_agent
+node --check web/app.js
+node --test web/app.test.cjs
+~~~
 
-### Batch Simulation Benchmark
-```bash
-python simulator.py --tasks 1000 --concurrency 8
-```
+The browser implementation uses ordinary JavaScript rather than Pyodide, because the combination rules need no Python runtime or native libraries. The web page is designed for modern browsers; clinical or regulatory validation has **not** been performed.
 
----
+## License
 
-## 🐳 Container Deployment
-
-### Docker Build & Run
-```bash
-docker build -t pi-rads-prostate-mri-agent .
-docker run -p 8000:8000 -e AUDIT_SECRET_KEY="your-secure-key" pi-rads-prostate-mri-agent
-```
-
-### Docker Compose
-```bash
-docker-compose up -d
-```
-
----
-
-## 📁 Project Structure
-
-```
-pi-rads-prostate-mri-agent/
-├── pi_rads_prostate_mri_agent/    # Core PI-RADS scoring package
-│   ├── __init__.py               # Package exports
-│   ├── models.py                 # Data models (Pydantic + dataclasses)
-│   ├── engine.py                 # PI-RADS scoring engine + ClinicalDomainEngine
-│   ├── agents.py                 # Agent coordinator framework
-│   ├── cli.py                    # CLI entry point for agent framework
-│   └── server.py                 # FastAPI REST server
-├── agents/                        # Enterprise agent framework
-│   ├── base.py                   # PHI guard, audit trail, security
-│   ├── models.py                 # Pydantic schemas
-│   ├── workers.py                # Specialized evaluation workers
-│   ├── supervisor.py             # Master orchestrator
-│   ├── api.py                    # FastAPI endpoints
-│   ├── learning.py               # Bayesian calibration engine
-│   ├── metrics.py                # Prometheus metrics collector
-│   └── streamer.py               # WebSocket telemetry
-├── tests/                         # Test suite
-│   ├── test_pi_rads.py           # PI-RADS engine tests
-│   ├── test_enrichment.py        # Enrichment module tests
-│   └── test_pi_rads_prostate_mri_agent.py  # Agent framework tests
-├── cli.py                        # Main CLI entry point (PI-RADS scoring)
-├── prostate_mri_sentinel.py      # Legacy sentinel agent
-├── enrichment.py                 # Feature enrichment engines
-├── simulator.py                  # High-throughput simulation
-├── web/                          # Operations console (HTML)
-├── Dockerfile                    # Container definition
-├── docker-compose.yml            # Multi-service orchestration
-└── pyproject.toml                # Project metadata and dependencies
-```
-
----
-
-## 📚 PI-RADS v2.1 Scoring Reference
-
-### Score Interpretation
-| Score | Clinical Significance |
-|:------|:---------------------|
-| 1 | Very low - clinically significant cancer is highly unlikely |
-| 2 | Low - clinically significant cancer is unlikely |
-| 3 | Intermediate - clinically significant cancer is equivocal |
-| 4 | High - clinically significant cancer is likely |
-| 5 | Very high - clinically significant cancer is highly likely |
-
-### Zone-Based Scoring Rules
-- **Peripheral Zone (PZ):** DWI is primary, DCE is secondary
-  - DCE positivity upgrades score 3 to 4
-- **Transition Zone (TZ):** T2W is primary, DWI is secondary
-  - DWI score 4-5 upgrades T2W score 3 to 4
-- **Biopsy Recommendation:** PI-RADS >= 3
-
----
-
-## 📄 License
-
-MIT License - see [LICENSE](LICENSE) for details.
+[MIT](LICENSE).

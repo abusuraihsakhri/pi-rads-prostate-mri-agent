@@ -12,8 +12,8 @@ supervisor = SystemSupervisor(model_provider="mock")
 
 app = FastAPI(
     title="Pi Rads Prostate Mri Agent API",
-    description="Enterprise Distributed Component Platform (Radiology & Neuroimaging Systems)",
-    version="3.0.0-ENTERPRISE",
+    description="Nonvalidated deterministic audit demonstration; not a clinical scoring endpoint",
+    version="2.0.1",
 )
 
 
@@ -23,7 +23,7 @@ class ChatRequest(BaseModel):
 
 @app.get("/health")
 def health():
-    return {"status": "HEALTHY", "service": "pi-rads-prostate-mri-agent", "domain": "Radiology & Neuroimaging Systems", "standard": "ACR RADS / Fleischner Society / ASPECTS Guidelines", "version": "3.0.0-ENTERPRISE"}
+    return {"status": "HEALTHY", "service": "pi-rads-prostate-mri-agent", "domain": "Radiology & Neuroimaging Systems", "standard": "Demonstration rule set; not clinical guidance", "version": "2.0.1"}
 
 
 @app.get("/metrics")

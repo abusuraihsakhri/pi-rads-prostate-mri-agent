@@ -93,7 +93,7 @@ class ProstateMRICoordinator:
             "stat_critical_alerts": stat_count,
             "warning_alerts": warn_count,
             "alerts": [a.to_dict() for a in all_alerts],
-            "guideline_standard": "ACR PI-RADS v2.1 & LI-RADS v2018",
+            "guideline_standard": "ACR PI-RADS v2.1 (scoring implemented separately)",
             "consensus_summary": f"Multi-agent supervision completed across 3 sub-agents with status [{status.value}].",
         }
 
@@ -105,6 +105,6 @@ class ProstateMRICoordinator:
         if "status" in q or "summary" in q:
             return f"ProstateMRI Sentinel: PI-RADS v2.1 Multiparametric MRI Scoring Agent currently tracking {len(self.case_registry)} cases in on-premises memory."
         elif "guideline" in q or "standard" in q:
-            return "Active clinical surveillance operates under ACR PI-RADS v2.1 & LI-RADS v2018 validated protocols."
+            return "This is a deterministic rules demonstration; lesion PI-RADS scoring is provided by the scoring engine."
         else:
-            return f"ProstateMRI Sentinel: PI-RADS v2.1 Multiparametric MRI Scoring Agent executive agent online. Zero-PHI air-gapped monitoring active."
+            return "Local deterministic agent demonstration. Do not input patient identifiers."

@@ -75,5 +75,5 @@ class SystemSupervisor:
 
     def query_supervisory_chat(self, query: str) -> str:
         PHIGuard.assert_no_phi(query)
-        prompt = f"Supervisor inquiry for Pi Rads Prostate Mri Agent under ACR RADS / Fleischner Society / ASPECTS Guidelines: {query}"
+        prompt = f"Supervisor inquiry for Pi Rads Prostate Mri Agent (nonvalidated demonstration rules): {query}"
         return self.llm.invoke(prompt)

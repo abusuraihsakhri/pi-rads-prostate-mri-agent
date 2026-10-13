@@ -8,7 +8,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import pytest
-from agents.base import PHIGuard, AuditLogger, SecurityException
+from agents.base import PHIGuard, AuditLogger, AuditTrail, SecurityException
 from agents.models import SystemTaskPayload, UrgencyLevel, SystemIntegrityStatus
 from agents.workers import InvariantQCWorker, SafetyEscalationWorker, ProtocolConformanceWorker
 from agents.supervisor import SystemSupervisor
@@ -21,6 +21,18 @@ def test_phi_guard_enforcement():
 
     # Clean text passes
     PHIGuard.assert_no_phi("Analytical assay specimen KEY-001 optimal")
+
+
+def test_audit_hmac_detects_mutated_records():
+    ledger = AuditTrail(secret_key="test-secret-only")
+    ledger.log("test", "operator", "event", {"status": "ok"})
+    ledger.log("test", "operator", "event", {"status": "ok"})
+    assert ledger.verify_integrity()
+    exported = ledger.get_trail()
+    exported[0]["payload_hash"] = "altered"
+    assert ledger.verify_integrity()  # snapshots cannot change signed entries
+    ledger.logs[0]["payload_hash"] = "tampered"
+    assert not ledger.verify_integrity()
 
 
 def test_specialized_workers():

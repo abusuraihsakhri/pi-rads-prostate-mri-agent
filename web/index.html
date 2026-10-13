@@ -1,236 +1,138 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pi Rads Prostate Mri Engine — Operations Console</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg: #090d16;
-            --card: #111827;
-            --border: #1f293d;
-            --accent: #3b82f6;
-            --accent-glow: rgba(59, 130, 246, 0.25);
-            --text: #f3f4f6;
-            --text-muted: #9ca3af;
-            --danger: #ef4444;
-            --warning: #f59e0b;
-            --success: #10b981;
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            font-family: 'Inter', sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            padding: 2rem;
-            min-height: 100vh;
-        }
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 1.5rem;
-            margin-bottom: 2rem;
-        }
-        .header-title h1 { font-size: 1.6rem; font-weight: 700; color: #fff; }
-        .header-title p { color: var(--text-muted); font-size: 0.9rem; margin-top: 0.25rem; }
-        .badge {
-            display: inline-block;
-            padding: 0.3rem 0.8rem;
-            border-radius: 9999px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            background: var(--accent-glow);
-            color: var(--accent);
-            border: 1px solid var(--accent);
-        }
-        .grid {
-            display: grid;
-            grid-template-columns: 1fr 1.2fr;
-            gap: 1.5rem;
-        }
-        .card {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 1.5rem;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-        }
-        .card h2 {
-            font-size: 1.1rem;
-            font-weight: 600;
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        .form-group { margin-bottom: 1rem; }
-        label { display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.4rem; }
-        input, select, textarea {
-            width: 100%;
-            padding: 0.65rem 0.9rem;
-            background: #0d1322;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            color: #fff;
-            font-family: inherit;
-            font-size: 0.9rem;
-        }
-        input:focus, textarea:focus { outline: none; border-color: var(--accent); }
-        .btn {
-            background: var(--accent);
-            color: #fff;
-            border: none;
-            padding: 0.7rem 1.4rem;
-            border-radius: 6px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: 0.2s;
-            width: 100%;
-        }
-        .btn:hover { background: #2563eb; }
-        .terminal {
-            background: #060911;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 1rem;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.85rem;
-            color: #10b981;
-            height: 380px;
-            overflow-y: auto;
-            white-space: pre-wrap;
-        }
-        .metrics-bar {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-        .metric-box {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 1rem;
-            text-align: center;
-        }
-        .metric-val { font-size: 1.4rem; font-weight: 700; color: #fff; margin-top: 0.25rem; }
-        .metric-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; }
-    </style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'unsafe-inline'; img-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <meta name="description" content="Local PI-RADS v2.1 prostate MRI scoring reference for peripheral and transition zone lesions.">
+  <title>PI-RADS v2.1 — Prostate MRI scoring</title>
+  <style>
+    :root { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; color-scheme: dark;
+      --bg: #0b1220; --surface: #142038; --line: #304159; --ink: #f1f5fb;
+      --soft: #b7c6d8; --focus: #9bc7ff; --accent: #76adff; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--ink); line-height: 1.55; }
+    a { color: var(--focus); }
+    .wrap { width: min(1050px, calc(100% - 2rem)); margin: auto; }
+    header { border-bottom: 1px solid var(--line); padding: 2rem 0 1.45rem; }
+    .eyebrow { color: var(--accent); text-transform: uppercase; letter-spacing: .11em;
+      font-size: .74rem; font-weight: 700; }
+    h1 { font-size: clamp(1.65rem, 3vw, 2.4rem); line-height: 1.2; margin: .45rem 0 .5rem; }
+    h2 { font-size: 1.2rem; margin: 0 0 1.1rem; }
+    h3 { font-size: 1rem; margin: 0; }
+    .lead { color: var(--soft); max-width: 780px; margin: 0; }
+    .notice { border-left: 3px solid var(--accent); padding: .65rem 1rem;
+      margin-top: 1.3rem; background: #17253e; color: var(--soft); font-size: .9rem; }
+    main { display: grid; grid-template-columns: minmax(290px, .9fr) minmax(350px, 1.1fr);
+      align-items: start; gap: 1rem; padding: 1.5rem 0; }
+    section { background: var(--surface); border: 1px solid var(--line);
+      border-radius: 12px; padding: 1.45rem; min-width: 0; }
+    label { font-size: .88rem; font-weight: 600; display: block; margin: 0 0 .4rem; }
+    select, input { display: block; width: 100%; min-height: 2.55rem;
+      padding: .5rem .68rem; border-radius: 7px; border: 1px solid #53647e;
+      background: #0b1426; color: var(--ink); font: inherit; }
+    :focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+    .field { margin-bottom: 1rem; }
+    .half { display: grid; grid-template-columns: 1fr 1fr; gap: .85rem; }
+    .check { display: flex; gap: .55rem; align-items: center; font-weight: 500; }
+    .check input { width: 1.1rem; min-height: 1.1rem; accent-color: var(--accent); }
+    .muted { color: var(--soft); font-size: .86rem; }
+    .actions { display: flex; flex-wrap: wrap; gap: .6rem; margin-top: 1.1rem; }
+    button { cursor: pointer; padding: .69rem 1rem; border-radius: 7px;
+      border: 1px solid #57779d; color: var(--ink); background: #243d5d;
+      font: inherit; font-weight: 600; }
+    button:hover { background: #31547e; }
+    .primary { background: #2267c0; border-color: #428bea; }
+    .primary:hover { background: #337ad2; }
+    #message { min-height: 1.5rem; margin: .8rem 0 0; color: #fcd59b; }
+    .result { border: 1px solid var(--line); background: #101b30; border-radius: 8px;
+      padding: 1rem; margin-top: .8rem; overflow-wrap: anywhere; }
+    .result p { margin: .4rem 0 0; color: var(--soft); font-size: .88rem; }
+    .result .result-notes { color: #d4e6ff; }
+    .results-content { min-height: 13rem; }
+    .rules { border-top: 1px solid var(--line); margin-top: 1rem; padding-top: 1rem; }
+    .rules ul { color: var(--soft); padding-left: 1.3rem; margin: .5rem 0; }
+    footer { font-size: .85rem; color: var(--soft); border-top: 1px solid var(--line);
+      padding: 1.2rem 0 2rem; }
+    @media(max-width: 790px) { main { grid-template-columns: 1fr; } }
+    @media(max-width: 420px) { .half { grid-template-columns: 1fr; } }
+  </style>
+  <script src="./app.js" defer></script>
 </head>
 <body>
-
-    <div class="header">
-        <div class="header-title">
-            <h1>Pi Rads Prostate Mri Engine</h1>
-            <p>Domain: Clinical & Cryptographic AI | Standard: CAP / CLSI / NIST Standards | LabMind-Atlas Architecture</p>
-        </div>
-        <div>
-            <span class="badge">Air-Gapped Active</span>
-            <span class="badge" style="background: rgba(16,185,129,0.2); color: #10b981; border-color: #10b981;">Zero-PHI Guard Active</span>
-        </div>
+  <header>
+    <div class="wrap">
+      <div class="eyebrow">Medical imaging · Reference tool</div>
+      <h1>PI-RADS v2.1 prostate MRI assessment</h1>
+      <p class="lead">Combine radiologist-assigned T2-weighted, diffusion-weighted and dynamic contrast-enhanced sequence scores for prostate peripheral- or transition-zone lesions.</p>
+      <div class="notice"><strong>Scope:</strong> This calculator does not interpret MRI images, determine cancer diagnosis, or prescribe biopsy. Results require qualified radiological and clinical review. Do not enter patient-identifying information.</div>
     </div>
-
-    <div class="metrics-bar">
-        <div class="metric-box">
-            <div class="metric-label">System Status</div>
-            <div class="metric-val" style="color: var(--success);" id="m-status">OPTIMAL</div>
+  </header>
+  <main class="wrap">
+    <section aria-labelledby="inputs-title">
+      <h2 id="inputs-title">Lesion assessment</h2>
+      <form id="lesion-form" autocomplete="off">
+        <div class="field">
+          <label for="zone">Prostate zone</label>
+          <select id="zone" required>
+            <option value="peripheral">Peripheral zone (DWI dominant)</option>
+            <option value="transition">Transition zone (T2W dominant)</option>
+          </select>
         </div>
-        <div class="metric-box">
-            <div class="metric-label">Tasks Processed</div>
-            <div class="metric-val" id="m-tasks">142</div>
+        <div class="half">
+          <div class="field">
+            <label for="t2w">T2W score</label>
+            <select id="t2w" required>
+              <option value="1">1</option><option value="2">2</option><option value="3" selected>3</option><option value="4">4</option><option value="5">5</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="dwi">DWI score</label>
+            <select id="dwi" required>
+              <option value="1">1</option><option value="2">2</option><option value="3" selected>3</option><option value="4">4</option><option value="5">5</option>
+            </select>
+          </div>
         </div>
-        <div class="metric-box">
-            <div class="metric-label">Audit Blocks Signed</div>
-            <div class="metric-val" id="m-audit">142</div>
+        <div class="field">
+          <label class="check" for="dce"><input type="checkbox" id="dce"> DCE positive</label>
+          <div class="muted">Only changes the final category for peripheral-zone DWI score 3.</div>
         </div>
-        <div class="metric-box">
-            <div class="metric-label">PHI Interceptions</div>
-            <div class="metric-val" style="color: var(--accent);" id="m-phi">0</div>
+        <div class="half">
+          <div class="field">
+            <label for="size">Size (mm, optional)</label>
+            <input type="number" id="size" min="0.01" step="any" placeholder="e.g. 12">
+          </div>
+          <div class="field">
+            <label for="location">Location (optional)</label>
+            <input id="location" maxlength="100" placeholder="e.g. left apex">
+          </div>
         </div>
-    </div>
-
-    <div class="grid">
-        <div class="card">
-            <h2>⚙️ Dispatch Distributed Component Audit</h2>
-            <div class="form-group">
-                <label>Task / Sample ID</label>
-                <input type="text" id="task_id" value="TASK-2026-LIVE-01">
-            </div>
-            <div class="form-group">
-                <label>Target Identifier</label>
-                <input type="text" id="target_id" value="SPECIMEN-ALPHA-77">
-            </div>
-            <div class="form-group">
-                <label>Primary Measurement / Value</label>
-                <input type="number" id="primary_metric" value="29.4" step="0.1">
-            </div>
-            <div class="form-group">
-                <label>Secondary Metric / Kinetic Index</label>
-                <input type="number" id="secondary_metric" value="14.8" step="0.1">
-            </div>
-            <div class="form-group">
-                <label>Status / Phenotype Descriptor</label>
-                <input type="text" id="status_descriptor" value="DISCORDANT_ANOMALY">
-            </div>
-            <div class="form-group">
-                <label><input type="checkbox" id="is_critical" checked> Trigger Emergency / Critical Flag</label>
-            </div>
-            <button class="btn" onclick="runAudit()">Execute Distributed Component Audit</button>
-        </div>
-
-        <div class="card">
-            <h2>📊 Real-Time Consensus Dossier & Audit Log</h2>
-            <div class="terminal" id="outputConsole">// Pi Rads Prostate Mri Engine Operations Console Ready
-// Connection established with Air-Gapped Supervisor
-// Cryptographic HMAC-SHA256 audit ledger loaded.
-// Ready for live task payload dispatch...</div>
-        </div>
-    </div>
-
-    <script>
-        async function runAudit() {
-            const consoleEl = document.getElementById('outputConsole');
-            consoleEl.innerText = "// Dispatching task across specialized workers...
-// Invoking InvariantQCWorker, SafetyEscalationWorker, ProtocolWorker...";
-
-            const payload = {
-                task_id: document.getElementById('task_id').value,
-                target_identifier: document.getElementById('target_id').value,
-                primary_metric: parseFloat(document.getElementById('primary_metric').value),
-                secondary_metric: parseFloat(document.getElementById('secondary_metric').value),
-                status_descriptor: document.getElementById('status_descriptor').value,
-                is_critical_flag: document.getElementById('is_critical').checked
-            };
-
-            try {
-                const res = await fetch('/api/audit', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                const data = await res.json();
-                consoleEl.innerText = JSON.stringify(data, null, 2);
-                document.getElementById('m-tasks').innerText = parseInt(document.getElementById('m-tasks').innerText) + 1;
-                document.getElementById('m-audit').innerText = parseInt(document.getElementById('m-audit').innerText) + 1;
-            } catch (err) {
-                consoleEl.innerText = "// Offline / Simulation Output:\n" + JSON.stringify({
-                    dossier_id: "DOSSIER-SIM-" + Math.floor(Math.random()*10000),
-                    system: "pi-rads-prostate-mri-engine",
-                    domain: "Clinical & Cryptographic AI",
-                    task_id: payload.task_id,
-                    overall_urgency: payload.is_critical_flag ? "CRITICAL_STAT_PANIC" : "ELEVATED_RISK",
-                    integrity_status: "DISCORDANT_ANOMALY",
-                    alerts: [
-                        { worker: "InvariantQCWorker", alert: "Primary metric exceeds upper reference bound" },
-                        { worker: "SafetyEscalationWorker", alert: "Critical emergency interlock flag active" }
-                    ],
-                    audit_hash: "HMAC_SHA256_e83f9a72b941d6c381f9"
-                }, null, 2);
-            }
-        }
-    </script>
+        <p class="muted">Scores 4 and 5 must already reflect the sequence-specific morphology, size, and extraprostatic extension criteria where applicable.</p>
+        <div class="actions"><button class="primary" type="submit">Assess lesion</button><button id="reset" type="button">Clear all</button></div>
+        <p id="message" role="status" aria-live="polite"></p>
+      </form>
+    </section>
+    <section aria-labelledby="results-title">
+      <h2 id="results-title">Results</h2>
+      <p id="summary" aria-live="polite">No lesions assessed</p>
+      <div id="results" class="results-content" aria-live="polite">Enter sequence-level scores to assess a lesion.</div>
+      <div class="actions"><button id="export" type="button">Export JSON</button></div>
+      <div class="rules">
+        <h3>PI-RADS v2.1 combination rules</h3>
+        <ul>
+          <li>Peripheral zone: DWI determines category; positive DCE upgrades DWI 3 to PI-RADS 4.</li>
+          <li>Transition zone: T2W 2 with DWI 4–5 becomes PI-RADS 3; T2W 3 with DWI 5 becomes PI-RADS 4.</li>
+          <li>Central zone and anterior fibromuscular stroma require specialist interpretation and are not automatically mapped onto transition-zone rules.</li>
+        </ul>
+      </div>
+    </section>
+  </main>
+  <footer><div class="wrap">
+    All calculations run locally in this browser tab. No entered values are sent to this website or retained between sessions. JSON files are created on your device.
+    <p>Reference: <a href="https://www.acr.org/Clinical-Resources/Reporting-and-Data-Systems/PI-RADS" target="_blank" rel="noopener noreferrer">American College of Radiology — PI-RADS</a>.
+    <a href="https://github.com/abusuraihsakhri/pi-rads-prostate-mri-agent" target="_blank" rel="noopener noreferrer">Source code</a>.</p>
+  </div></footer>
+  <noscript><p class="wrap">JavaScript is required for local scoring.</p></noscript>
 </body>
 </html>
