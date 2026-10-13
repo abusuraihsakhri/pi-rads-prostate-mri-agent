@@ -1,11 +1,9 @@
-version: '3.8'
-
 services:
   pi-rads-prostate-mri-engine:
     build: .
     container_name: pi-rads-prostate-mri-engine
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
     environment:
       - AUDIT_SECRET_KEY=${AUDIT_SECRET_KEY:-}
       - MODEL_PROVIDER=mock
