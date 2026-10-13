@@ -39,5 +39,11 @@ def test_bad_score_payloads_rejected(payload):
     response = client.post("/api/score", json=payload)
     assert response.status_code == 422
 
+@pytest.mark.parametrize("metric", ["NaN", "Infinity", "-Infinity"])
+def test_nonfinite_demonstration_metric_rejected(metric):
+    res = client.post("/api/audit", json={"primary_metric": metric})
+    assert res.status_code == 422
+
+
 def test_empty_assessment_rejected():
     assert client.post("/api/assess", json={"lesions": []}).status_code == 422
