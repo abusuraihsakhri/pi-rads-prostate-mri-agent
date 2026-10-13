@@ -7,7 +7,7 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - AUDIT_SECRET_KEY=pi-rads-prostate-mri-engine-prod-audit-key-2026
+      - AUDIT_SECRET_KEY=${AUDIT_SECRET_KEY:-}
       - MODEL_PROVIDER=mock
     restart: unless-stopped
     healthcheck:
