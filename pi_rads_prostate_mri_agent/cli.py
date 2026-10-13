@@ -29,6 +29,18 @@ def _validate_safe_path(file_path: str) -> str:
     return abs_path
 
 
+def _parse_bool(value):
+    """Accept explicit CSV boolean spellings; never rely on bool(nonempty_str)."""
+    if isinstance(value, bool):
+        return value
+    val = str(value).strip().lower()
+    if val in ("1", "true", "yes", "y"):
+        return True
+    if val in ("0", "false", "no", "n", ""):
+        return False
+    raise ValueError(f"Invalid boolean value for is_stat: {value!r}")
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(prog="pi-rads-prostate-mri-agent", description="ProstateMRI Sentinel: PI-RADS v2.1 Multiparametric MRI Scoring Agent")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -69,7 +81,7 @@ def main(argv=None):
         dossier = coordinator.process_case(case)
         print("=" * 80)
         print(f"  PROSTATEMRI SENTINEL: PI-RADS V2.1 MULTIPARAMETRIC MRI SCORING AGENT")
-        print(f"  Domain: Abdominal Radiology | Standard: ACR PI-RADS v2.1 & LI-RADS v2018")
+        print(f"  Domain: Abdominal Radiology | Rule framework: PI-RADS v2.1")
         print(f"  Case: {dossier['case_id']} | Status: [{dossier['overall_status']}] | Total Alerts: {dossier['total_alerts']}")
         print("=" * 80)
         for a in dossier["alerts"]:
@@ -95,7 +107,7 @@ def main(argv=None):
             fieldnames = list(reader.fieldnames or [])
             rows = list(reader)
 
-        out_fields = fieldnames + ["overall_status", "total_alerts", "stat_critical_alerts", "consensus_summary"]
+        out_fields = list(dict.fromkeys(fieldnames + ["overall_status", "total_alerts", "stat_critical_alerts", "consensus_summary"]))
         out_rows = []
         for r in rows:
             case = ClinicalCasePayload(
@@ -104,7 +116,7 @@ def main(argv=None):
                 primary_metric=float(r.get("metric_primary", r.get("primary_metric", 15.0))),
                 secondary_metric=float(r.get("metric_secondary", r.get("secondary_metric", 5.0))),
                 status_flag=r.get("status_flag", r.get("status_text", "NORMAL")),
-                is_stat=bool(r.get("is_stat", r.get("critical_flag", False))),
+                is_stat=_parse_bool(r.get("is_stat", r.get("critical_flag", False))),
             )
             dossier = coordinator.process_case(case)
             row_dict = dict(r)
