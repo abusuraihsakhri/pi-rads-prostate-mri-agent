@@ -1,0 +1,16 @@
+.git
+.github
+.env
+.env.*
+*.key
+*.pem
+__pycache__
+*.pyc
+.pytest_cache
+.venv
+dist
+build
+*.egg-info
+results.csv
+output.csv
+*.log
