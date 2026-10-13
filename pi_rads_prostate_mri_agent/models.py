@@ -4,6 +4,7 @@ Standard: ACR PI-RADS v2.1
 """
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
+import math
 from enum import Enum
 from typing import List, Optional, Dict, Any
 
@@ -66,12 +67,26 @@ class ProstateLesion:
     def validate(self) -> List[str]:
         """Validate scores are in range. Returns list of errors."""
         errors = []
-        if not 1 <= self.t2w_score <= 5:
-            errors.append(f"T2W score must be 1-5, got {self.t2w_score}")
-        if not 1 <= self.dwi_score <= 5:
-            errors.append(f"DWI score must be 1-5, got {self.dwi_score}")
-        if self.size_mm is not None and self.size_mm <= 0:
-            errors.append(f"Size must be positive, got {self.size_mm}")
+        if type(self.t2w_score) is not int or not 1 <= self.t2w_score <= 5:
+            errors.append(f"T2W score must be an integer 1-5, got {self.t2w_score}")
+        if type(self.dwi_score) is not int or not 1 <= self.dwi_score <= 5:
+            errors.append(f"DWI score must be an integer 1-5, got {self.dwi_score}")
+        if type(self.dce_positive) is not bool:
+            errors.append("DCE positivity must be a boolean")
+        if self.size_mm is not None and (
+            isinstance(self.size_mm, bool)
+            or not isinstance(self.size_mm, (int, float))
+            or not math.isfinite(self.size_mm)
+            or self.size_mm <= 0
+        ):
+            errors.append(f"Size must be a finite positive number, got {self.size_mm}")
+        if self.adc_value is not None and (
+            isinstance(self.adc_value, bool)
+            or not isinstance(self.adc_value, (int, float))
+            or not math.isfinite(self.adc_value)
+            or self.adc_value < 0
+        ):
+            errors.append(f"ADC must be a finite nonnegative number, got {self.adc_value}")
         return errors
 
 
